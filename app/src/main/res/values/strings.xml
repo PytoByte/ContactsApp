@@ -1,4 +1,25 @@
 <resources>
     <string name="app_name">ContactsApp</string>
     <string name="title_activity_main">ContactsApp</string>
+    <string name="dialog_button_confirm">Got it, continue</string>
+    <string name="dialog_button_dismiss">Cancel</string>
+
+    <string name="contacts_empty_list">Contact list is empty</string>
+    <string name="contacts_error_format">Error: %1$s</string>
+    <string name="contacts_button_retry">Retry</string>
+    <string name="contacts_button_grant_access">Grant access to contacts</string>
+
+    <string name="permission_read_title">Contacts Access</string>
+    <string name="permission_read_description">This app displays your phonebook. We need permission to read your contacts to display them on the screen and allow you to quickly search for people.</string>
+
+    <string name="permission_call_title">Phone Call Permission</string>
+    <string name="permission_call_description">To make a phone call, the app requires access to the calling system.</string>
+
+    <string name="btn_delete_duplicates">Delete duplicate contacts</string>
+    <string name="status_duplicates_success">Duplicate contacts deleted successfully</string>
+    <string name="status_duplicates_not_found">No duplicate contacts found</string>
+    <string name="status_duplicates_error">An error occurred during the operation</string>
+
+    <string name="permission_write_title">Modify Contacts Access</string>
+    <string name="permission_write_description">To find and remove duplicate entries, the app requires permission to modify your contacts list.</string>
 </resources>

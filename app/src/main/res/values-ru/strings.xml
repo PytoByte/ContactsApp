@@ -2,4 +2,25 @@
 <resources>
     <string name="app_name">ContactsApp</string>
     <string name="title_activity_main">ContactsApp</string>
+    <string name="dialog_button_confirm">Понятно, продолжить</string>
+    <string name="dialog_button_dismiss">Отмена</string>
+
+    <string name="contacts_empty_list">Пустой список контактов</string>
+    <string name="contacts_error_format">Ошибка: %1$s</string>
+    <string name="contacts_button_retry">Повторить</string>
+    <string name="contacts_button_grant_access">Предоставить доступ к контактам</string>
+
+    <string name="permission_read_title">Доступ к контактам</string>
+    <string name="permission_read_description">Это приложение отображает вашу телефонную книгу. Нам нужно считать контакты, чтобы вывести их на экран и позволить вам быстро искать нужных людей.</string>
+
+    <string name="permission_call_title">Разрешение на звонки</string>
+    <string name="permission_call_description">Чтобы совершить звонок, приложению требуется доступ к вызовам.</string>
+
+    <string name="btn_delete_duplicates">Удалить одинаковые контакты</string>
+    <string name="status_duplicates_success">Повторяющиеся контакты удалены успешно</string>
+    <string name="status_duplicates_not_found">Повторяющиеся контакты не найдены</string>
+    <string name="status_duplicates_error">Произошла ошибка при удалении</string>
+
+    <string name="permission_write_title">Изменение списка контактов</string>
+    <string name="permission_write_description">Чтобы сервис мог найти и удалить одинаковые номера, приложению необходимо разрешение на изменение списка контактов.</string>
 </resources>

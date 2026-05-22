@@ -38,11 +38,11 @@ android {
     }
     buildFeatures {
         compose = true
+        aidl = true
     }
 }
 
 dependencies {
-    implementation(libs.coil.compose)
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.hilt.android)

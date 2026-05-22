@@ -11,15 +11,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pytobyte.contactsapp.manager.ContactsServiceManager
 import pytobyte.contactsapp.model.Contact
 import pytobyte.contactsapp.repository.ContactRepository
 
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
-    private val contactRepository: ContactRepository
+    private val contactRepository: ContactRepository,
+    private val contactsServiceManager: ContactsServiceManager
 ) : ViewModel() {
-    private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
-    val contacts: StateFlow<List<Contact>> = _contacts.asStateFlow()
+    private val _contacts = MutableStateFlow<Map<String, List<Contact>>>(emptyMap())
+    val contacts: StateFlow<Map<String, List<Contact>>> = _contacts.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -27,27 +29,68 @@ class ContactsViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _operationStatus = MutableStateFlow<String?>(null)
+    val operationStatus: StateFlow<String?> = _operationStatus.asStateFlow()
+
+    private val contactsObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            loadContacts()
+        }
+    }
+
+    init {
+        contactsServiceManager.bindService()
+    }
+
     fun registerObserver() {
-        contactRepository.registerObserver(
-            object : ContentObserver(Handler(Looper.getMainLooper())) {
-                override fun onChange(selfChange: Boolean) {
-                    viewModelScope.launch {
-                        loadContacts()
-                    }
-                }
-            }
-        )
+        contactRepository.registerObserver(contactsObserver)
     }
 
     fun loadContacts() = viewModelScope.launch {
         _isLoading.value = true
         _error.value = null
         try {
-            _contacts.value = contactRepository.getContacts()
+            val rawContacts = contactRepository.getContacts()
+            // Группировка происходит в фоне, UI поток вообще об этом не знает
+            _contacts.value = groupContactsByAlphabet(rawContacts)
         } catch (e: Exception) {
             _error.value = e.localizedMessage ?: "Не удалось загрузить контакты"
         } finally {
             _isLoading.value = false
         }
+    }
+
+    private fun groupContactsByAlphabet(list: List<Contact>): Map<String, List<Contact>> {
+        return list
+            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.displayName })
+            .groupBy { contact ->
+                contact.displayName.firstOrNull()?.uppercase()?.takeIf { it.isNotBlank() } ?: "#"
+            }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        contactRepository.unregisterObserver(contactsObserver)
+        contactsServiceManager.unbindService()
+    }
+
+    fun deleteDuplicates() {
+        viewModelScope.launch {
+            contactsServiceManager.removeDuplicates { statusCode ->
+                viewModelScope.launch {
+                    _operationStatus.value = when (statusCode) {
+                        1 -> "success"
+                        3 -> "not_found"
+                        else -> "error"
+                    }
+
+                    loadContacts()
+                }
+            }
+        }
+    }
+
+    fun clearStatus() {
+        _operationStatus.value = null
     }
 }
