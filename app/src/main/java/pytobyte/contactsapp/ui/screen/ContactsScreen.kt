@@ -32,6 +32,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import pytobyte.contactsapp.R
 import pytobyte.contactsapp.model.Contact
+import pytobyte.contactsapp.model.OperationStatus
 import pytobyte.contactsapp.ui.screen.components.ContactNumbersDialog
 import pytobyte.contactsapp.ui.screen.components.ContactsList
 import pytobyte.contactsapp.ui.screen.components.PermissionExplanationDialog
@@ -97,8 +98,8 @@ fun ContactsScreen(
     LaunchedEffect(operationStatus) {
         operationStatus?.let { status ->
             val messageRes = when (status) {
-                "success" -> R.string.status_duplicates_success
-                "not_found" -> R.string.status_duplicates_not_found
+                OperationStatus.SUCCESS -> R.string.status_duplicates_success
+                OperationStatus.NOT_FOUND -> R.string.status_duplicates_not_found
                 else -> R.string.status_duplicates_error
             }
             Toast.makeText(context, messageRes, Toast.LENGTH_LONG).show()

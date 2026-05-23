@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pytobyte.contactsapp.manager.ContactsServiceManager
 import pytobyte.contactsapp.model.Contact
+import pytobyte.contactsapp.model.OperationStatus
 import pytobyte.contactsapp.repository.ContactRepository
 
 @HiltViewModel
@@ -29,8 +30,8 @@ class ContactsViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _operationStatus = MutableStateFlow<String?>(null)
-    val operationStatus: StateFlow<String?> = _operationStatus.asStateFlow()
+    private val _operationStatus = MutableStateFlow<OperationStatus?>(null)
+    val operationStatus: StateFlow<OperationStatus?> = _operationStatus.asStateFlow()
 
     private val contactsObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) {
@@ -51,10 +52,9 @@ class ContactsViewModel @Inject constructor(
         _error.value = null
         try {
             val rawContacts = contactRepository.getContacts()
-            // Группировка происходит в фоне, UI поток вообще об этом не знает
             _contacts.value = groupContactsByAlphabet(rawContacts)
         } catch (e: Exception) {
-            _error.value = e.localizedMessage ?: "Не удалось загрузить контакты"
+            _error.value = e.localizedMessage
         } finally {
             _isLoading.value = false
         }
@@ -75,18 +75,9 @@ class ContactsViewModel @Inject constructor(
     }
 
     fun deleteDuplicates() {
-        viewModelScope.launch {
-            contactsServiceManager.removeDuplicates { statusCode ->
-                viewModelScope.launch {
-                    _operationStatus.value = when (statusCode) {
-                        1 -> "success"
-                        3 -> "not_found"
-                        else -> "error"
-                    }
-
-                    loadContacts()
-                }
-            }
+        contactsServiceManager.removeDuplicates { status ->
+            _operationStatus.value = status
+            loadContacts()
         }
     }
 

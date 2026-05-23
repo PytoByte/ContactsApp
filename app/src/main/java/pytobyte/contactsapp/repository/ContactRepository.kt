@@ -1,5 +1,6 @@
 package pytobyte.contactsapp.repository
 
+import android.content.ContentProviderOperation
 import android.content.Context
 import android.database.ContentObserver
 import android.graphics.BitmapFactory
@@ -13,6 +14,7 @@ import pytobyte.contactsapp.model.Contact
 import pytobyte.contactsapp.model.PhoneInfo
 import java.io.InputStream
 import androidx.core.net.toUri
+import pytobyte.contactsapp.model.OperationStatus
 
 class ContactRepository @Inject constructor(
     @ApplicationContext context: Context,
@@ -113,6 +115,63 @@ class ContactRepository @Inject constructor(
 
         contactsMap.values.map { contact ->
             contact.copy(phones = phonesMap[contact.id] ?: emptyList())
+        }
+    }
+
+    suspend fun removeDuplicateContacts(): OperationStatus = withContext(ioDispatcher) {
+        try {
+            val contactDataBundles = mutableMapOf<String, MutableSet<String>>()
+
+            resolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                arrayOf(ContactsContract.Data.CONTACT_ID, ContactsContract.Data.MIMETYPE, ContactsContract.Data.DATA1),
+                null, null, null
+            )?.use { cursor ->
+                val idIdx = cursor.getColumnIndexOrThrow(ContactsContract.Data.CONTACT_ID)
+                val mimeIdx = cursor.getColumnIndexOrThrow(ContactsContract.Data.MIMETYPE)
+                val data1Idx = cursor.getColumnIndexOrThrow(ContactsContract.Data.DATA1)
+
+                while (cursor.moveToNext()) {
+                    val contactId = cursor.getString(idIdx) ?: continue
+                    val mimeType = cursor.getString(mimeIdx) ?: continue
+                    val rawData = cursor.getString(data1Idx) ?: continue
+
+                    if (mimeType == ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE) continue
+
+                    val normalizedData = if (mimeType == ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE) {
+                        rawData.replace(Regex("[^0-9+]"), "")
+                    } else {
+                        rawData.trim().lowercase()
+                    }
+
+                    if (normalizedData.isNotBlank()) {
+                        contactDataBundles.getOrPut(contactId) { mutableSetOf() }.add("$mimeType:$normalizedData")
+                    }
+                }
+            }
+
+            val contactIdsToDelete = contactDataBundles
+                .filterValues { it.isNotEmpty() }
+                .entries
+                .groupBy { it.value.sorted() }
+                .values
+                .flatMap { group -> group.drop(1).map { it.key } }
+
+            if (contactIdsToDelete.isEmpty()) {
+                return@withContext OperationStatus.NOT_FOUND
+            }
+
+            val operations = contactIdsToDelete.mapTo(ArrayList()) { contactId ->
+                ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI)
+                    .withSelection("${ContactsContract.RawContacts.CONTACT_ID} = ?", arrayOf(contactId))
+                    .build()
+            }
+
+            resolver.applyBatch(ContactsContract.AUTHORITY, operations)
+            OperationStatus.SUCCESS
+
+        } catch (_: Exception) {
+            OperationStatus.ERROR
         }
     }
 

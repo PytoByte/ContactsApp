@@ -8,6 +8,7 @@ import android.os.IBinder
 import dagger.hilt.android.qualifiers.ApplicationContext
 import pytobyte.contactsapp.IContactsCallback
 import pytobyte.contactsapp.IContactsService
+import pytobyte.contactsapp.model.OperationStatus
 import pytobyte.contactsapp.service.DuplicateContactsService
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,20 +47,23 @@ class ContactsServiceManager @Inject constructor(
         }
     }
 
-    fun removeDuplicates(onResult: (Int) -> Unit) {
+    fun removeDuplicates(onResult: (OperationStatus) -> Unit) {
         if (!isBound || iContactsService == null) {
-            onResult(DuplicateContactsService.STATUS_ERROR)
+            onResult(OperationStatus.ERROR)
             return
         }
 
         try {
             iContactsService?.deleteDuplicateContacts(object : IContactsCallback.Stub() {
                 override fun onOperationFinished(statusCode: Int) {
-                    onResult(statusCode)
+                    val status = OperationStatus.entries.getOrElse(statusCode) {
+                        OperationStatus.ERROR
+                    }
+                    onResult(status)
                 }
             })
         } catch (_: Exception) {
-            onResult(DuplicateContactsService.STATUS_ERROR)
+            onResult(OperationStatus.ERROR)
         }
     }
 }
