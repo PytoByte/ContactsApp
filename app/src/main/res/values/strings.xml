@@ -10,7 +10,7 @@
     <string name="contacts_button_grant_access">Grant access to contacts</string>
 
     <string name="permission_read_title">Contacts Access</string>
-    <string name="permission_read_description">This app displays your phonebook. We need permission to read your contacts to display them on the screen and allow you to quickly search for people.</string>
+    <string name="permission_read_description">This app displays your phonebook. To display it, the app requires permission to read your contacts list.</string>
 
     <string name="permission_call_title">Phone Call Permission</string>
     <string name="permission_call_description">To make a phone call, the app requires access to the calling system.</string>

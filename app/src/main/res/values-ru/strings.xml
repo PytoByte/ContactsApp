@@ -11,7 +11,7 @@
     <string name="contacts_button_grant_access">Предоставить доступ к контактам</string>
 
     <string name="permission_read_title">Доступ к контактам</string>
-    <string name="permission_read_description">Это приложение отображает вашу телефонную книгу. Нам нужно считать контакты, чтобы вывести их на экран и позволить вам быстро искать нужных людей.</string>
+    <string name="permission_read_description">Это приложение отображает вашу телефонную книгу. Чтобы вывести её на экран, приложению необходимо разрешение на чтение списка контактов.</string>
 
     <string name="permission_call_title">Разрешение на звонки</string>
     <string name="permission_call_description">Чтобы совершить звонок, приложению требуется доступ к вызовам.</string>
